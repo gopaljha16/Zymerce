@@ -86,7 +86,8 @@ export const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.products = action.payload;
+        // Handle paginated response - extract results array
+        state.products = action.payload.results || action.payload;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.isLoading = false;

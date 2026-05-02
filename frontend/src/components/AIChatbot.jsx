@@ -38,6 +38,10 @@ function AIChatbot() {
         
         // Add user message
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+        
+        // Add empty assistant message that will be filled with streaming content
+        const assistantMessageIndex = messages.length + 1;
+        setMessages(prev => [...prev, { role: 'assistant', content: '', streaming: true }]);
         setIsLoading(true);
 
         try {
@@ -46,29 +50,91 @@ function AIChatbot() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ message: userMessage }),
+                body: JSON.stringify({ 
+                    message: userMessage,
+                    stream: true 
+                }),
             });
 
-            const data = await response.json();
-            
-            if (data.error) {
-                toast.error('Chatbot error. Please check API configuration.');
-                setMessages(prev => [...prev, { 
-                    role: 'assistant', 
-                    content: data.response || 'Sorry, I encountered an error. Please try again.' 
-                }]);
-            } else {
-                setMessages(prev => [...prev, { 
-                    role: 'assistant', 
-                    content: data.response 
-                }]);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            // Set loading to false once streaming starts
+            setIsLoading(false);
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let accumulatedText = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            
+                            if (data.error) {
+                                toast.error('Chatbot error. Please check API configuration.');
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    newMessages[assistantMessageIndex] = {
+                                        role: 'assistant',
+                                        content: data.response || 'Sorry, I encountered an error.',
+                                        streaming: false
+                                    };
+                                    return newMessages;
+                                });
+                                break;
+                            }
+
+                            if (data.done) {
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    newMessages[assistantMessageIndex] = {
+                                        ...newMessages[assistantMessageIndex],
+                                        streaming: false
+                                    };
+                                    return newMessages;
+                                });
+                                break;
+                            }
+
+                            if (data.response) {
+                                accumulatedText += data.response;
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    newMessages[assistantMessageIndex] = {
+                                        role: 'assistant',
+                                        content: accumulatedText,
+                                        streaming: true
+                                    };
+                                    return newMessages;
+                                });
+                            }
+                        } catch (parseError) {
+                            console.error('Error parsing SSE data:', parseError);
+                        }
+                    }
+                }
             }
         } catch (error) {
             console.error('Chatbot error:', error);
-            setMessages(prev => [...prev, { 
-                role: 'assistant', 
-                content: 'Sorry, I\'m having trouble connecting. Please try again later.' 
-            }]);
+            setMessages(prev => {
+                const newMessages = [...prev];
+                newMessages[assistantMessageIndex] = {
+                    role: 'assistant',
+                    content: 'Sorry, I\'m having trouble connecting. Please try again later.',
+                    streaming: false
+                };
+                return newMessages;
+            });
         } finally {
             setIsLoading(false);
         }
@@ -91,7 +157,7 @@ function AIChatbot() {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-6 right-6 bg-primary text-white p-4 rounded-full shadow-2xl hover:bg-primary-dark transition-all duration-300 transform hover:scale-110 z-50 flex items-center gap-2"
+                    className="fixed bottom-6 right-6 bg-primary text-white p-4 rounded-full shadow-2xl hover:bg-primary-dark transition-all duration-300 transform hover:scale-110 z-[90] flex items-center gap-2"
                 >
                     <SparklesIcon className="w-6 h-6" />
                     <ChatBubbleLeftRightIcon className="w-6 h-6" />
@@ -100,7 +166,7 @@ function AIChatbot() {
 
             {/* Chat Window */}
             {isOpen && (
-                <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 animate-scale-in">
+                <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-[90] animate-scale-in">
                     {/* Header */}
                     <div className="bg-gradient-to-r from-primary to-primary-dark text-white p-4 rounded-t-2xl flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -135,7 +201,12 @@ function AIChatbot() {
                                             : 'bg-white text-gray-900 shadow-md rounded-bl-none'
                                     }`}
                                 >
-                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                    <p className="text-sm whitespace-pre-wrap">
+                                        {message.content}
+                                        {message.streaming && message.content && (
+                                            <span className="inline-block w-0.5 h-4 ml-1 bg-gray-900 animate-pulse"></span>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         ))}

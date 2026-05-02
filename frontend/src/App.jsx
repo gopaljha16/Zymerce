@@ -6,6 +6,10 @@ import { fetchWishlist } from './store/slices/wishlistSlice';
 import { fetchCategories } from './store/slices/productSlice';
 import ProductList from "./pages/ProductList";
 import ProductDetails from "./pages/ProductDetails";
+import CategoriesPage from "./pages/CategoriesPage";
+import DealsPage from "./pages/DealsPage";
+import WhatsNewPage from "./pages/WhatsNewPage";
+import DeliveryPage from "./pages/DeliveryPage";
 import Navbar from './components/Navbar';
 import AIChatbot from './components/AIChatbot';
 import AccessibilityMenu from './components/AccessibilityMenu';
@@ -43,10 +47,14 @@ function App() {
                 </a>
                 
                 <Navbar />
-                <main id="main-content" className="flex-grow">
+                <main id="main-content" className="flex-grow pt-20">
                     <Routes>
                         <Route path="/" element={<ProductList />} />
                         <Route path="/product/:id" element={<ProductDetails />} />
+                        <Route path="/categories" element={<CategoriesPage />} />
+                        <Route path="/deals" element={<DealsPage />} />
+                        <Route path="/whats-new" element={<WhatsNewPage />} />
+                        <Route path="/delivery" element={<DeliveryPage />} />
                         <Route path="/cart" element={<CartPage />} />
                         <Route path="/wishlist" element={<WishlistPage />} />
                         <Route element={<PrivateRouter />}>

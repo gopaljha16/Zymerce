@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { authFetch } from '../utils/auth';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 function UserDashboard() {
     const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL;
@@ -84,6 +85,12 @@ function UserDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+            <SEO 
+                title="My Orders - Zymerce"
+                description="Track and manage your orders at Zymerce."
+                keywords="orders, order history, track order, Zymerce"
+            />
+            
             <div className="max-w-7xl mx-auto px-6">
                 {/* Header */}
                 <div className="mb-8">

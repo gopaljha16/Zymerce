@@ -12,6 +12,7 @@ import {
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { authFetch } from '../utils/auth';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 function AdminDashboard() {
     const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL;
@@ -95,6 +96,12 @@ function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+            <SEO 
+                title="Admin Dashboard - Zymerce"
+                description="Manage your store, orders, and analytics."
+                keywords="admin, dashboard, analytics, store management, Zymerce"
+            />
+            
             <div className="max-w-7xl mx-auto px-6">
                 {/* Header */}
                 <div className="mb-8">

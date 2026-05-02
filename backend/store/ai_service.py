@@ -1,33 +1,49 @@
 import os
-import google.generativeai as genai
 from django.conf import settings
 from .models import Product, Order, Category
 
+# Try to import the new Google Generative AI package
+try:
+    from google import genai
+    from google.genai import types
+    GENAI_AVAILABLE = True
+except ImportError:
+    GENAI_AVAILABLE = False
+    print("Google Generative AI package not available")
+
 # Configure Gemini
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-if GEMINI_API_KEY and GEMINI_API_KEY != 'your_gemini_api_key_here':
-    genai.configure(api_key=GEMINI_API_KEY)
 
 class AIService:
     """AI Service using Google Gemini for chatbot and recommendations"""
     
     def __init__(self):
-        self.model = None
-        if GEMINI_API_KEY and GEMINI_API_KEY != 'your_gemini_api_key_here':
+        self.client = None
+        if GEMINI_API_KEY and GEMINI_API_KEY != 'your_gemini_api_key_here' and GENAI_AVAILABLE:
             try:
-                self.model = genai.GenerativeModel('gemini-pro')
+                # Initialize the new client
+                self.client = genai.Client(api_key=GEMINI_API_KEY)
+                print("✓ Gemini client initialized successfully")
             except Exception as e:
                 print(f"Error initializing Gemini: {e}")
     
-    def get_chatbot_response(self, user_message, context=None):
+    def get_chatbot_response(self, user_message, context=None, stream=False):
         """
         Get chatbot response for customer support
         """
-        if not self.model:
-            return {
-                'response': 'AI service is not configured. Please add your Gemini API key to the .env file.',
-                'error': True
-            }
+        if not self.client:
+            if stream:
+                yield {
+                    'response': 'AI service is not configured. Please add your Gemini API key to the .env file.',
+                    'error': True,
+                    'done': True
+                }
+            else:
+                return {
+                    'response': 'AI service is not configured. Please add your Gemini API key to the .env file.',
+                    'error': True
+                }
+            return
         
         try:
             # Build context about the store
@@ -62,19 +78,53 @@ class AIService:
             if context:
                 store_context += f"\n\nUser context: {context}"
             
-            # Generate response
+            # Generate response using new API
             prompt = f"{store_context}\n\nCustomer: {user_message}\n\nAssistant:"
-            response = self.model.generate_content(prompt)
             
-            return {
-                'response': response.text,
-                'error': False
-            }
+            if stream:
+                # Stream the response
+                response_stream = self.client.models.generate_content_stream(
+                    model='gemini-2.5-flash',
+                    contents=prompt
+                )
+                
+                for chunk in response_stream:
+                    if chunk.text:
+                        yield {
+                            'response': chunk.text,
+                            'error': False,
+                            'done': False
+                        }
+                
+                # Send done signal
+                yield {
+                    'response': '',
+                    'error': False,
+                    'done': True
+                }
+            else:
+                response = self.client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=prompt
+                )
+                
+                return {
+                    'response': response.text,
+                    'error': False
+                }
         except Exception as e:
-            return {
-                'response': f'Sorry, I encountered an error: {str(e)}',
-                'error': True
-            }
+            error_msg = f'Sorry, I encountered an error: {str(e)}'
+            if stream:
+                yield {
+                    'response': error_msg,
+                    'error': True,
+                    'done': True
+                }
+            else:
+                return {
+                    'response': error_msg,
+                    'error': True
+                }
     
     def get_product_recommendations(self, product_id=None, user_id=None, limit=4):
         """
@@ -106,7 +156,7 @@ class AIService:
         """
         Generate AI-powered product description
         """
-        if not self.model:
+        if not self.client:
             return "AI description generation not available. Please configure Gemini API key."
         
         try:
@@ -123,7 +173,10 @@ class AIService:
             - Include relevant keywords
             """
             
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
             return response.text.strip()
         except Exception as e:
             return f"Error generating description: {str(e)}"
@@ -132,7 +185,7 @@ class AIService:
         """
         Analyze product reviews and generate insights
         """
-        if not self.model:
+        if not self.client:
             return "Review analysis not available. Please configure Gemini API key."
         
         try:
@@ -161,7 +214,10 @@ class AIService:
             Keep it concise (3-4 sentences).
             """
             
-            response = self.model.generate_content(prompt)
+            response = self.client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
             return response.text.strip()
         except Exception as e:
             return f"Error analyzing reviews: {str(e)}"

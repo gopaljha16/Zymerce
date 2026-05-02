@@ -20,7 +20,19 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'user', 'username', 'rating', 'comment', 'created_at', 'updated_at']
         read_only_fields = ['user', 'created_at', 'updated_at']
 
+class ProductListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for product list - no reviews"""
+    category = CategorySerializer(read_only=True)
+    average_rating = serializers.ReadOnlyField()
+    review_count = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'description', 'price', 'image', 'stock', 'is_available', 
+                  'category', 'average_rating', 'review_count', 'created_at', 'updated_at']
+
 class ProductSerializer(serializers.ModelSerializer):
+    """Detailed serializer for single product - includes reviews"""
     category = CategorySerializer(read_only=True)
     average_rating = serializers.ReadOnlyField()
     review_count = serializers.ReadOnlyField()

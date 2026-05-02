@@ -5,6 +5,7 @@ import { addToCart } from '../store/slices/cartSlice';
 import { TrashIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import SEO from '../components/SEO';
 
 function WishlistPage() {
     const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL;
@@ -61,6 +62,12 @@ function WishlistPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+            <SEO 
+                title="My Wishlist - Zymerce"
+                description="View and manage your wishlist items at Zymerce."
+                keywords="wishlist, favorites, saved items, Zymerce"
+            />
+            
             <div className="max-w-7xl mx-auto px-6">
                 <h1 className="text-4xl font-bold text-gray-900 mb-8">
                     My Wishlist

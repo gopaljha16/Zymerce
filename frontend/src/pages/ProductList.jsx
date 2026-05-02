@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../store/slices/productSlice";
 import ProductCard from "../components/ProductCard.jsx";
+import ProductCardSkeleton from "../components/ProductCardSkeleton.jsx";
 import SEO from "../components/SEO";
-import { FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 
 function ProductList() {
     const dispatch = useDispatch();
     const { products, categories, isLoading } = useSelector((state) => state.products);
     const [showFilters, setShowFilters] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         category: '',
         priceRange: 'all',
@@ -21,7 +23,7 @@ function ProductList() {
     }, [dispatch]);
 
     // Filter and sort products
-    const filteredProducts = products
+    const filteredProducts = (Array.isArray(products) ? products : [])
         .filter((product) => {
             // Category filter
             if (filters.category && product.category?.name !== filters.category) {
@@ -69,6 +71,18 @@ function ProductList() {
             }
         });
 
+    // Pagination
+    const productsPerPage = 12;
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+    const startIndex = (currentPage - 1) * productsPerPage;
+    const endIndex = startIndex + productsPerPage;
+    const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
     const clearFilters = () => {
         setFilters({
             category: '',
@@ -78,10 +92,55 @@ function ProductList() {
         });
     };
 
+    const goToPage = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <div className="min-h-screen bg-slate-50 pb-20">
+                <SEO 
+                    title="Shop All Products - Zymerce"
+                    description="Browse our wide selection of quality products at great prices."
+                    keywords="online shopping, ecommerce, products, buy online, Zymerce"
+                    ogType="website"
+                />
+                
+                {/* Hero Section Skeleton */}
+                <div className="relative h-[500px] flex items-center justify-center overflow-hidden bg-gray-200 mx-4 mt-6 rounded-[2.5rem] shadow-2xl animate-pulse">
+                    <div className="text-center px-6">
+                        <div className="h-20 bg-gray-300 rounded w-96 mx-auto mb-6"></div>
+                        <div className="h-6 bg-gray-300 rounded w-64 mx-auto mb-10"></div>
+                        <div className="h-12 bg-gray-300 rounded w-32 mx-auto"></div>
+                    </div>
+                </div>
+
+                {/* Products Grid Skeleton */}
+                <div className="max-w-7xl mx-auto px-6 pt-12">
+                    <div className="bg-white rounded-2xl shadow-md p-6 mb-8 animate-pulse">
+                        <div className="flex flex-wrap items-center gap-4">
+                            <div className="h-10 bg-gray-200 rounded flex-1 min-w-[200px]"></div>
+                            <div className="h-10 bg-gray-200 rounded w-40"></div>
+                            <div className="h-10 bg-gray-200 rounded w-40"></div>
+                            <div className="h-10 bg-gray-200 rounded w-40"></div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-end justify-between mb-8">
+                        <div>
+                            <div className="h-10 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+                            <div className="h-1.5 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+                        </div>
+                        <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                        {[...Array(12)].map((_, index) => (
+                            <ProductCardSkeleton key={index} />
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     }
@@ -203,12 +262,65 @@ function ProductList() {
                 </div>
 
                 {/* Products Grid */}
-                {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-                        {filteredProducts.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
+                {currentProducts.length > 0 ? (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                            {currentProducts.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-12">
+                                <button
+                                    onClick={() => goToPage(currentPage - 1)}
+                                    disabled={currentPage === 1}
+                                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeftIcon className="w-5 h-5" />
+                                </button>
+
+                                {[...Array(totalPages)].map((_, index) => {
+                                    const page = index + 1;
+                                    // Show first page, last page, current page, and pages around current
+                                    if (
+                                        page === 1 ||
+                                        page === totalPages ||
+                                        (page >= currentPage - 1 && page <= currentPage + 1)
+                                    ) {
+                                        return (
+                                            <button
+                                                key={page}
+                                                onClick={() => goToPage(page)}
+                                                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                                                    currentPage === page
+                                                        ? 'bg-primary text-white shadow-lg'
+                                                        : 'border border-gray-300 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        );
+                                    } else if (
+                                        page === currentPage - 2 ||
+                                        page === currentPage + 2
+                                    ) {
+                                        return <span key={page} className="px-2">...</span>;
+                                    }
+                                    return null;
+                                })}
+
+                                <button
+                                    onClick={() => goToPage(currentPage + 1)}
+                                    disabled={currentPage === totalPages}
+                                    className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRightIcon className="w-5 h-5" />
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="bg-white rounded-2xl shadow-md p-12 text-center">
                         <div className="text-6xl mb-4">🔍</div>

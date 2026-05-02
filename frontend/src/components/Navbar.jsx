@@ -32,21 +32,7 @@ function Navbar() {
     };
 
     return (
-        <nav className="bg-primary text-white shadow-lg sticky top-0 z-50">
-            {/* Top Bar */}
-            <div className="bg-primary-dark text-sm">
-                <div className="max-w-7xl mx-auto px-6 py-2 flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <span>📞 +1234567890</span>
-                        <span>Get 50% Off On Selected Items</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <span>Eng 🌐</span>
-                        <span>Location 📍</span>
-                    </div>
-                </div>
-            </div>
-
+        <nav className="bg-primary text-white shadow-lg fixed top-0 left-0 right-0 z-[100]">
             {/* Main Navbar */}
             <div className="max-w-7xl mx-auto px-6 py-4">
                 <div className="flex items-center justify-between gap-8">
@@ -55,21 +41,21 @@ function Navbar() {
                         <div className="bg-white p-2 rounded-lg">
                             <ShoppingCartIcon className="w-6 h-6 text-primary" />
                         </div>
-                        <span className="text-2xl font-bold">Shopcart</span>
+                        <span className="text-2xl font-bold">Zymerce</span>
                     </Link>
 
                     {/* Navigation Links */}
                     <div className="hidden md:flex items-center gap-6">
-                        <Link to="/" className="hover:text-secondary transition-colors font-medium">
+                        <Link to="/categories" className="hover:text-secondary transition-colors font-medium">
                             Categories
                         </Link>
-                        <Link to="/" className="hover:text-secondary transition-colors font-medium">
+                        <Link to="/deals" className="hover:text-secondary transition-colors font-medium">
                             Deals
                         </Link>
-                        <Link to="/" className="hover:text-secondary transition-colors font-medium">
+                        <Link to="/whats-new" className="hover:text-secondary transition-colors font-medium">
                             What's New
                         </Link>
-                        <Link to="/" className="hover:text-secondary transition-colors font-medium">
+                        <Link to="/delivery" className="hover:text-secondary transition-colors font-medium">
                             Delivery
                         </Link>
                     </div>
@@ -109,7 +95,7 @@ function Navbar() {
 
                             {/* Dropdown Menu */}
                             {showUserMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 text-gray-900">
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 text-gray-900 z-[110]">
                                     {user ? (
                                         <>
                                             <Link

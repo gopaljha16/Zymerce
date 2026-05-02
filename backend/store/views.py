@@ -1,8 +1,9 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer, UserSerializer, WishlistSerializer, ReviewSerializer
+from .serializers import RegisterSerializer, UserSerializer, WishlistSerializer, ReviewSerializer, ProductListSerializer
 from rest_framework import status
 from .models import Product, Category, Cart, CartItem, Order, OrderItem, Wishlist, Review
 from .serializers import ProductSerializer, CategorySerializer, CartSerializer, CartItemSerializer
@@ -13,25 +14,33 @@ from .ai_service import ai_service
 from .cache_service import cache_service, cache_response
 from django.views.decorators.cache import cache_page
 
-@api_view(['GET'])
-@cache_response(timeout=300, key_prefix='products')
-def get_products(request):
-    products = Product.objects.all()
-    serializer = ProductSerializer(products, many=True, context={'request': request})
-    return Response(serializer.data)
+class ProductPagination(PageNumberPagination):
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 @api_view(['GET'])
-@cache_response(timeout=600, key_prefix='product_detail')
+def get_products(request):
+    products = Product.objects.select_related('category').prefetch_related('reviews').all()
+    
+    # Apply pagination
+    paginator = ProductPagination()
+    paginated_products = paginator.paginate_queryset(products, request)
+    
+    serializer = ProductListSerializer(paginated_products, many=True, context={'request': request})
+    
+    return paginator.get_paginated_response(serializer.data)
+
+@api_view(['GET'])
 def get_product(request, pk):
     try:
-        product = Product.objects.get(id=pk)
+        product = Product.objects.select_related('category').prefetch_related('reviews__user').get(id=pk)
         serializer = ProductSerializer(product, context={'request': request})
         return Response(serializer.data)
     except Product.DoesNotExist:
         return Response({'error': 'Product not found'}, status=404)
 
 @api_view(['GET'])
-@cache_response(timeout=3600, key_prefix='categories')
 def get_categories(request):
     categories = Category.objects.all()
     serializer = CategorySerializer(categories, many=True)
@@ -236,7 +245,6 @@ def register_view(request):
 # Admin Dashboard Views
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
-@cache_response(timeout=60, key_prefix='admin_dashboard')
 def admin_dashboard_stats(request):
     # Check cache first
     cached_stats = cache_service.get_cached_dashboard_stats()
@@ -324,8 +332,12 @@ def update_order_status(request, order_id):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def chatbot(request):
-    """AI-powered chatbot for customer support"""
+    """AI-powered chatbot for customer support with streaming support"""
+    from django.http import StreamingHttpResponse
+    import json
+    
     message = request.data.get('message', '')
+    stream = request.data.get('stream', False)
     
     if not message:
         return Response({'error': 'Message is required'}, status=400)
@@ -339,8 +351,20 @@ def chatbot(request):
         if recent_orders.exists():
             context += f"\nRecent orders: {', '.join([f'#{o.id} ({o.status})' for o in recent_orders])}"
     
-    result = ai_service.get_chatbot_response(message, context)
-    return Response(result)
+    if stream:
+        # Streaming response
+        def generate():
+            for chunk in ai_service.get_chatbot_response(message, context, stream=True):
+                yield f"data: {json.dumps(chunk)}\n\n"
+        
+        response = StreamingHttpResponse(generate(), content_type='text/event-stream')
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'
+        return response
+    else:
+        # Regular response
+        result = ai_service.get_chatbot_response(message, context, stream=False)
+        return Response(result)
 
 @api_view(['GET'])
 def product_recommendations(request):

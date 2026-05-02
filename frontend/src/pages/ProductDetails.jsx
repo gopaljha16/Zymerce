@@ -154,13 +154,13 @@ function ProductDetails() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+        <div className="min-h-screen bg-gray-50 pb-20">
             <SEO 
                 title={`${product.name} - Zymerce`}
                 description={product.description || `Buy ${product.name} at the best price. ${product.category?.name} available at Zymerce.`}
                 keywords={`${product.name}, ${product.category?.name}, buy online, Zymerce`}
                 ogType="product"
-                ogImage={product.image ? `${BASEURL}${product.image}` : undefined}
+                ogImage={product.image || undefined}
             />
             
             <div className="max-w-7xl mx-auto px-6">
@@ -179,7 +179,7 @@ function ProductDetails() {
                     <div className="space-y-4">
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden aspect-square">
                             <img
-                                src={product.image ? `${BASEURL}${product.image}` : '/placeholder.png'}
+                                src={product.image || '/placeholder.png'}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
                             />
@@ -190,7 +190,7 @@ function ProductDetails() {
                             {[1, 2, 3, 4].map((_, idx) => (
                                 <div key={idx} className="bg-white rounded-lg overflow-hidden aspect-square border-2 border-transparent hover:border-primary cursor-pointer transition-all">
                                     <img
-                                        src={product.image ? `${BASEURL}${product.image}` : '/placeholder.png'}
+                                        src={product.image || '/placeholder.png'}
                                         alt={`Thumbnail ${idx + 1}`}
                                         className="w-full h-full object-cover"
                                     />
@@ -420,7 +420,7 @@ function ProductDetails() {
                                 >
                                     <div className="aspect-square bg-gray-100">
                                         <img
-                                            src={item.image ? `${BASEURL}${item.image}` : '/placeholder.png'}
+                                            src={item.image || '/placeholder.png'}
                                             alt={item.name}
                                             className="w-full h-full object-cover"
                                         />

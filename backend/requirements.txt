@@ -6,7 +6,8 @@ python-dotenv
 psycopg2-binary
 Pillow
 dj-database-url
-google-generativeai
+google-genai
 razorpay
 redis
 django-redis
+requests
