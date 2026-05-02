@@ -6,9 +6,10 @@ from .serializers import RegisterSerializer, UserSerializer, WishlistSerializer,
 from rest_framework import status
 from .models import Product, Category, Cart, CartItem, Order, OrderItem, Wishlist, Review
 from .serializers import ProductSerializer, CategorySerializer, CartSerializer, CartItemSerializer
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import TruncDate
 from datetime import datetime, timedelta
+from .ai_service import ai_service
 
 @api_view(['GET'])
 def get_products(request):
@@ -301,3 +302,148 @@ def update_order_status(request, order_id):
             return Response({'error': 'Invalid status'}, status=400)
     except Order.DoesNotExist:
         return Response({'error': 'Order not found'}, status=404)
+
+
+# AI Chatbot Views
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def chatbot(request):
+    """AI-powered chatbot for customer support"""
+    message = request.data.get('message', '')
+    
+    if not message:
+        return Response({'error': 'Message is required'}, status=400)
+    
+    # Get user context if authenticated
+    context = None
+    if request.user.is_authenticated:
+        context = f"User: {request.user.username}"
+        # Add recent orders info
+        recent_orders = Order.objects.filter(user=request.user).order_by('-created_at')[:3]
+        if recent_orders.exists():
+            context += f"\nRecent orders: {', '.join([f'#{o.id} ({o.status})' for o in recent_orders])}"
+    
+    result = ai_service.get_chatbot_response(message, context)
+    return Response(result)
+
+@api_view(['GET'])
+def product_recommendations(request):
+    """Get AI-powered product recommendations"""
+    product_id = request.query_params.get('product_id')
+    user_id = request.query_params.get('user_id')
+    limit = int(request.query_params.get('limit', 4))
+    
+    recommendations = ai_service.get_product_recommendations(
+        product_id=product_id,
+        user_id=user_id,
+        limit=limit
+    )
+    
+    serializer = ProductSerializer(recommendations, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def smart_search(request):
+    """AI-powered smart search"""
+    query = request.query_params.get('q', '')
+    
+    if not query:
+        return Response({'error': 'Search query is required'}, status=400)
+    
+    products = ai_service.smart_search(query)
+    serializer = ProductSerializer(products, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def generate_product_description(request):
+    """Generate AI product description"""
+    product_name = request.data.get('name')
+    category = request.data.get('category')
+    
+    if not product_name or not category:
+        return Response({'error': 'Product name and category are required'}, status=400)
+    
+    description = ai_service.generate_product_description(product_name, category)
+    return Response({'description': description})
+
+@api_view(['GET'])
+def analyze_reviews(request, product_id):
+    """Analyze product reviews with AI"""
+    analysis = ai_service.analyze_product_reviews(product_id)
+    return Response({'analysis': analysis})
+
+# Payment Gateway Views (Razorpay)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_razorpay_order(request):
+    """Create Razorpay order for payment"""
+    import razorpay
+    import os
+    
+    razorpay_key = os.getenv('RAZORPAY_KEY_ID')
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET')
+    
+    if not razorpay_key or razorpay_key == 'your_razorpay_key_id':
+        return Response({
+            'error': 'Payment gateway not configured. Please add Razorpay credentials.'
+        }, status=400)
+    
+    try:
+        client = razorpay.Client(auth=(razorpay_key, razorpay_secret))
+        
+        amount = request.data.get('amount')  # Amount in rupees
+        currency = request.data.get('currency', 'INR')
+        
+        # Create Razorpay order
+        razorpay_order = client.order.create({
+            'amount': int(float(amount) * 100),  # Convert to paise
+            'currency': currency,
+            'payment_capture': 1
+        })
+        
+        return Response({
+            'order_id': razorpay_order['id'],
+            'amount': razorpay_order['amount'],
+            'currency': razorpay_order['currency'],
+            'key': razorpay_key
+        })
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_razorpay_payment(request):
+    """Verify Razorpay payment signature"""
+    import razorpay
+    import os
+    
+    razorpay_secret = os.getenv('RAZORPAY_KEY_SECRET')
+    
+    try:
+        client = razorpay.Client(auth=(os.getenv('RAZORPAY_KEY_ID'), razorpay_secret))
+        
+        payment_id = request.data.get('razorpay_payment_id')
+        order_id = request.data.get('razorpay_order_id')
+        signature = request.data.get('razorpay_signature')
+        
+        # Verify signature
+        params_dict = {
+            'razorpay_order_id': order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature
+        }
+        
+        client.utility.verify_payment_signature(params_dict)
+        
+        return Response({
+            'status': 'success',
+            'message': 'Payment verified successfully'
+        })
+    except razorpay.errors.SignatureVerificationError:
+        return Response({
+            'status': 'failed',
+            'message': 'Payment verification failed'
+        }, status=400)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)

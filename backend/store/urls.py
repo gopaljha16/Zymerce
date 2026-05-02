@@ -33,8 +33,19 @@ urlpatterns = [
   path('products/<int:product_id>/reviews/', views.get_product_reviews),
   path('reviews/create/', views.create_review),
   path('reviews/<int:review_id>/delete/', views.delete_review),
+  path('products/<int:product_id>/reviews/analyze/', views.analyze_reviews),
   
   # Admin
   path('admin/dashboard/', views.admin_dashboard_stats),
   path('admin/orders/<int:order_id>/status/', views.update_order_status),
+  path('admin/generate-description/', views.generate_product_description),
+  
+  # AI Features
+  path('ai/chatbot/', views.chatbot),
+  path('ai/recommendations/', views.product_recommendations),
+  path('ai/search/', views.smart_search),
+  
+  # Payment
+  path('payment/create-order/', views.create_razorpay_order),
+  path('payment/verify/', views.verify_razorpay_payment),
 ]

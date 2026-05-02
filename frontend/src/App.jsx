@@ -7,6 +7,7 @@ import { fetchCategories } from './store/slices/productSlice';
 import ProductList from "./pages/ProductList";
 import ProductDetails from "./pages/ProductDetails";
 import Navbar from './components/Navbar';
+import AIChatbot from './components/AIChatbot';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import Login from "./pages/Login";
@@ -50,6 +51,10 @@ function App() {
                         <Route path="/signup" element={<Signup />} />
                     </Routes>
                 </main>
+                
+                {/* AI Chatbot - Available on all pages */}
+                <AIChatbot />
+                
                 <footer className="py-10 text-center text-slate-400 text-sm font-medium bg-slate-900">
                     <div className="max-w-7xl mx-auto px-6">
                         <p>© 2026 Zymerce. All rights reserved.</p>
