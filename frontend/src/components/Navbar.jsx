@@ -113,18 +113,18 @@ function Navbar() {
                                     {user ? (
                                         <>
                                             <Link
-                                                to="/profile"
-                                                className="block px-4 py-2 hover:bg-gray-100"
-                                                onClick={() => setShowUserMenu(false)}
-                                            >
-                                                My Profile
-                                            </Link>
-                                            <Link
-                                                to="/orders"
+                                                to="/dashboard"
                                                 className="block px-4 py-2 hover:bg-gray-100"
                                                 onClick={() => setShowUserMenu(false)}
                                             >
                                                 My Orders
+                                            </Link>
+                                            <Link
+                                                to="/admin"
+                                                className="block px-4 py-2 hover:bg-gray-100"
+                                                onClick={() => setShowUserMenu(false)}
+                                            >
+                                                Admin Dashboard
                                             </Link>
                                             <button
                                                 onClick={handleLogout}

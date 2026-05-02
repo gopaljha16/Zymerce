@@ -135,7 +135,7 @@ function ProductCard({ product }) {
                 <div className="flex items-center justify-between">
                     <div>
                         <span className="text-2xl font-bold text-primary">
-                            ${product.price}
+                            ₹{product.price}
                         </span>
                     </div>
                 </div>

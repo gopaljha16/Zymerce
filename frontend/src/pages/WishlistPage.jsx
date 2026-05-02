@@ -111,7 +111,7 @@ function WishlistPage() {
                                     </Link>
 
                                     <p className="text-2xl font-bold text-primary mb-4">
-                                        ${item.product.price}
+                                        ₹{item.product.price}
                                     </p>
 
                                     <div className="flex gap-2">

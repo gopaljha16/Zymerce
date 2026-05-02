@@ -12,6 +12,8 @@ import CheckoutPage from './pages/CheckoutPage';
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import WishlistPage from "./pages/WishlistPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import PrivateRouter from './components/PrivateRouter';
 
 function App() {
@@ -41,6 +43,8 @@ function App() {
                         <Route path="/wishlist" element={<WishlistPage />} />
                         <Route element={<PrivateRouter />}>
                             <Route path="/checkout" element={<CheckoutPage />} />
+                            <Route path="/dashboard" element={<UserDashboard />} />
+                            <Route path="/admin" element={<AdminDashboard />} />
                         </Route>
                         <Route path="/login" element={<Login />} />
                         <Route path="/signup" element={<Signup />} />
