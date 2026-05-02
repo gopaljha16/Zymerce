@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../store/slices/productSlice";
 import ProductCard from "../components/ProductCard.jsx";
+import SEO from "../components/SEO";
 import { FunnelIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 function ProductList() {
@@ -87,6 +88,13 @@ function ProductList() {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
+            <SEO 
+                title="Shop All Products - Zymerce"
+                description="Browse our wide selection of quality products at great prices. Find electronics, fashion, home goods and more at Zymerce."
+                keywords="online shopping, ecommerce, products, buy online, Zymerce"
+                ogType="website"
+            />
+            
             {/* Hero Section */}
             <div className="relative h-[500px] flex items-center justify-center overflow-hidden bg-primary mx-4 mt-6 rounded-[2.5rem] shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary-light/30 to-primary-dark/30 mix-blend-overlay z-10"></div>

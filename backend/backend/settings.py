@@ -50,12 +50,15 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'store.middleware.SecurityHeadersMiddleware',  # Custom security headers
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'store.middleware.RateLimitMiddleware',  # Rate limiting
+    'store.middleware.RequestTimingMiddleware',  # Performance monitoring
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -179,3 +182,49 @@ EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER', 'noreply@zymerce.com')
+
+# Cache Configuration
+# Use Redis if available, otherwise fall back to local memory cache
+REDIS_HOST = os.getenv('REDIS_HOST', None)
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+REDIS_PASS = os.getenv('REDIS_PASS', None)
+REDIS_USERNAME = os.getenv('REDIS_USERNAME', 'default')
+
+if REDIS_HOST:
+    # Redis Cache (Production)
+    REDIS_URL = f"redis://{REDIS_USERNAME}:{REDIS_PASS}@{REDIS_HOST}:{REDIS_PORT}/0"
+    
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+                'SOCKET_CONNECT_TIMEOUT': 5,
+                'SOCKET_TIMEOUT': 5,
+                'RETRY_ON_TIMEOUT': True,
+                'MAX_CONNECTIONS': 50,
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 50,
+                    'retry_on_timeout': True,
+                },
+            },
+            'KEY_PREFIX': 'zymerce',
+            'TIMEOUT': 300,
+        }
+    }
+else:
+    # Local Memory Cache (Development)
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'zymerce-cache',
+            'OPTIONS': {
+                'MAX_ENTRIES': 1000
+            }
+        }
+    }
+
+# Session Configuration
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'

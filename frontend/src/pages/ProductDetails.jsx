@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchProduct } from '../store/slices/productSlice';
 import { addToCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
+import SEO from '../components/SEO';
 import { 
     HeartIcon, 
     ShoppingCartIcon, 
@@ -154,6 +155,14 @@ function ProductDetails() {
 
     return (
         <div className="min-h-screen bg-gray-50 pt-20 pb-20">
+            <SEO 
+                title={`${product.name} - Zymerce`}
+                description={product.description || `Buy ${product.name} at the best price. ${product.category?.name} available at Zymerce.`}
+                keywords={`${product.name}, ${product.category?.name}, buy online, Zymerce`}
+                ogType="product"
+                ogImage={product.image ? `${BASEURL}${product.image}` : undefined}
+            />
+            
             <div className="max-w-7xl mx-auto px-6">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-2 text-sm text-gray-600 mb-8">

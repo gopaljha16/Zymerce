@@ -10,14 +10,18 @@ from django.db.models import Sum, Count, Avg, Q
 from django.db.models.functions import TruncDate
 from datetime import datetime, timedelta
 from .ai_service import ai_service
+from .cache_service import cache_service, cache_response
+from django.views.decorators.cache import cache_page
 
 @api_view(['GET'])
+@cache_response(timeout=300, key_prefix='products')
 def get_products(request):
     products = Product.objects.all()
     serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data)
 
 @api_view(['GET'])
+@cache_response(timeout=600, key_prefix='product_detail')
 def get_product(request, pk):
     try:
         product = Product.objects.get(id=pk)
@@ -27,6 +31,7 @@ def get_product(request, pk):
         return Response({'error': 'Product not found'}, status=404)
 
 @api_view(['GET'])
+@cache_response(timeout=3600, key_prefix='categories')
 def get_categories(request):
     categories = Category.objects.all()
     serializer = CategorySerializer(categories, many=True)
@@ -231,7 +236,13 @@ def register_view(request):
 # Admin Dashboard Views
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
+@cache_response(timeout=60, key_prefix='admin_dashboard')
 def admin_dashboard_stats(request):
+    # Check cache first
+    cached_stats = cache_service.get_cached_dashboard_stats()
+    if cached_stats:
+        return Response(cached_stats)
+    
     # Total stats
     total_revenue = Order.objects.aggregate(total=Sum('total_amount'))['total'] or 0
     total_orders = Order.objects.count()
@@ -275,7 +286,7 @@ def admin_dashboard_stats(request):
         'price': str(p.price),
     } for p in low_stock]
     
-    return Response({
+    stats_data = {
         'total_revenue': str(total_revenue),
         'total_orders': total_orders,
         'total_products': total_products,
@@ -285,7 +296,12 @@ def admin_dashboard_stats(request):
         'top_products': list(top_products),
         'status_distribution': list(status_distribution),
         'low_stock_products': low_stock_data,
-    })
+    }
+    
+    # Cache the stats
+    cache_service.cache_dashboard_stats(stats_data)
+    
+    return Response(stats_data)
 
 @api_view(['PATCH'])
 @permission_classes([IsAdminUser])

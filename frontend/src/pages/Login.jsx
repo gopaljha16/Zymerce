@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { saveTokens } from "../utils/auth";
+import SEO from "../components/SEO";
 
 function Login() {
   const BASE = import.meta.env.VITE_DJANGO_BASE_URL;
@@ -35,6 +36,12 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
+      <SEO 
+        title="Login - Zymerce"
+        description="Login to your Zymerce account to access your orders, wishlist, and more."
+        keywords="login, sign in, account, Zymerce"
+      />
+      
       <div className="max-w-md w-full bg-white p-6 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Login</h2>
         <form onSubmit={handleSubmit} className="space-y-3">

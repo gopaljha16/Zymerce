@@ -1,5 +1,6 @@
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
+import SEO from "../components/SEO";
 
 function CartPage() {
     const { cartItems,total, removeFromCart, updateQuantity } = useCart();
@@ -8,6 +9,12 @@ function CartPage() {
 
     return (
         <div className="pt-20 min-h-screen bg-gray-100 p-8">
+            <SEO 
+                title="Shopping Cart - Zymerce"
+                description="Review your shopping cart and proceed to checkout."
+                keywords="cart, shopping cart, checkout, Zymerce"
+            />
+            
             <h1 className="text-3xl font-bold mb-6 text-center">🛒 Your Cart</h1>
             {cartItems.length === 0 ? (
                 <p className="text-center text-gray-600">Your cart is empty.</p>

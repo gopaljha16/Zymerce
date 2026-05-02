@@ -8,3 +8,5 @@ Pillow
 dj-database-url
 google-generativeai
 razorpay
+redis
+django-redis

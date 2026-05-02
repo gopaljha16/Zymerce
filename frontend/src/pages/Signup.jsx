@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEO from "../components/SEO";
 
 function Signup() {
   const BASE = import.meta.env.VITE_DJANGO_BASE_URL;
@@ -33,6 +34,12 @@ function Signup() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
+      <SEO 
+        title="Sign Up - Zymerce"
+        description="Create your Zymerce account to start shopping and enjoy exclusive deals."
+        keywords="signup, register, create account, Zymerce"
+      />
+      
       <div className="max-w-md w-full bg-white p-6 rounded shadow">
         <h2 className="text-2xl font-bold mb-4">Signup</h2>
         <form onSubmit={handleSubmit} className="space-y-3">

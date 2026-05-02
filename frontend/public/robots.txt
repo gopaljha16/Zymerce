@@ -1,0 +1,13 @@
+# Zymerce Robots.txt
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/
+Disallow: /profile/
+
+# Sitemap
+Sitemap: https://zymerce.com/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 10

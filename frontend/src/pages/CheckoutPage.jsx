@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authFetch } from "../utils/auth";
 import { useCart } from "../context/CartContext";
+import SEO from "../components/SEO";
 
 function CheckoutPage() {
   const [form, setForm] = useState({
@@ -43,6 +44,12 @@ function CheckoutPage() {
 
   return (
     <div className="pt-20 p-6">
+      <SEO 
+        title="Checkout - Zymerce"
+        description="Complete your purchase securely at Zymerce."
+        keywords="checkout, payment, order, Zymerce"
+      />
+      
       <div className="max-w-lg mx-auto bg-white p-6 shadow rounded">
         <h1 className="text-2xl font-bold mb-4">Checkout</h1>
 

@@ -4,12 +4,55 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Zymerce - You E-Commerce Store</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Shop the best electronics, headphones, furniture, and beauty products at Zymerce. Free shipping, 30-day returns, and secure payments." />
+    <meta name="keywords" content="e-commerce, online shopping, electronics, headphones, furniture, beauty products, India" />
+    <meta name="author" content="Zymerce" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://zymerce.com/" />
+    <meta property="og:title" content="Zymerce - Premium E-Commerce Store" />
+    <meta property="og:description" content="Shop the best electronics, headphones, furniture, and beauty products" />
+    <meta property="og:image" content="/og-image.jpg" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://zymerce.com/" />
+    <meta property="twitter:title" content="Zymerce - Premium E-Commerce Store" />
+    <meta property="twitter:description" content="Shop the best electronics, headphones, furniture, and beauty products" />
+    <meta property="twitter:image" content="/og-image.jpg" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0f5132" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Zymerce" />
+    
+    <title>Zymerce - Your E-Commerce Store</title>
+    
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Register Service Worker -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered:', registration);
+            })
+            .catch((error) => {
+              console.log('SW registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
