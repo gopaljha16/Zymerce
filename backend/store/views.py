@@ -1,11 +1,14 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from django.contrib.auth.models import User
 from .serializers import RegisterSerializer, UserSerializer, WishlistSerializer, ReviewSerializer
 from rest_framework import status
 from .models import Product, Category, Cart, CartItem, Order, OrderItem, Wishlist, Review
 from .serializers import ProductSerializer, CategorySerializer, CartSerializer, CartItemSerializer
+from django.db.models import Sum, Count, Avg
+from django.db.models.functions import TruncDate
+from datetime import datetime, timedelta
 
 @api_view(['GET'])
 def get_products(request):
@@ -182,12 +185,38 @@ def delete_review(request, review_id):
     except Review.DoesNotExist:
         return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
 
-# User View
+# User Views
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user(request):
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_orders(request):
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders_data = []
+    
+    for order in orders:
+        items = OrderItem.objects.filter(order=order)
+        items_data = [{
+            'product_name': item.product.name,
+            'product_image': request.build_absolute_uri(item.product.image.url) if item.product.image else None,
+            'quantity': item.quantity,
+            'price': str(item.price),
+        } for item in items]
+        
+        orders_data.append({
+            'id': order.id,
+            'status': order.status,
+            'total_amount': str(order.total_amount),
+            'created_at': order.created_at,
+            'updated_at': order.updated_at,
+            'items': items_data,
+        })
+    
+    return Response(orders_data)
   
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -197,3 +226,78 @@ def register_view(request):
         user = serializer.save()
         return Response({"message": "User created successfully", "user": UserSerializer(user).data}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Admin Dashboard Views
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_dashboard_stats(request):
+    # Total stats
+    total_revenue = Order.objects.aggregate(total=Sum('total_amount'))['total'] or 0
+    total_orders = Order.objects.count()
+    total_products = Product.objects.count()
+    total_customers = User.objects.filter(is_staff=False).count()
+    
+    # Recent orders
+    recent_orders = Order.objects.order_by('-created_at')[:5]
+    recent_orders_data = [{
+        'id': order.id,
+        'user': order.user.username if order.user else 'Guest',
+        'total_amount': str(order.total_amount),
+        'status': order.status,
+        'created_at': order.created_at,
+    } for order in recent_orders]
+    
+    # Sales by day (last 7 days)
+    seven_days_ago = datetime.now() - timedelta(days=7)
+    daily_sales = Order.objects.filter(created_at__gte=seven_days_ago).annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        total=Sum('total_amount'),
+        count=Count('id')
+    ).order_by('date')
+    
+    # Top selling products
+    top_products = OrderItem.objects.values('product__name').annotate(
+        total_sold=Sum('quantity'),
+        revenue=Sum('price')
+    ).order_by('-total_sold')[:5]
+    
+    # Order status distribution
+    status_distribution = Order.objects.values('status').annotate(count=Count('id'))
+    
+    # Low stock products
+    low_stock = Product.objects.filter(stock__lt=10, stock__gt=0).order_by('stock')[:5]
+    low_stock_data = [{
+        'id': p.id,
+        'name': p.name,
+        'stock': p.stock,
+        'price': str(p.price),
+    } for p in low_stock]
+    
+    return Response({
+        'total_revenue': str(total_revenue),
+        'total_orders': total_orders,
+        'total_products': total_products,
+        'total_customers': total_customers,
+        'recent_orders': recent_orders_data,
+        'daily_sales': list(daily_sales),
+        'top_products': list(top_products),
+        'status_distribution': list(status_distribution),
+        'low_stock_products': low_stock_data,
+    })
+
+@api_view(['PATCH'])
+@permission_classes([IsAdminUser])
+def update_order_status(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        new_status = request.data.get('status')
+        
+        if new_status in dict(Order.STATUS_CHOICES):
+            order.status = new_status
+            order.save()
+            return Response({'message': 'Order status updated successfully'})
+        else:
+            return Response({'error': 'Invalid status'}, status=400)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)

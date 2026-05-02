@@ -15,11 +15,11 @@ def seed():
     furniture, _ = Category.objects.get_or_create(name='Furniture', slug='furniture')
     beauty, _ = Category.objects.get_or_create(name='Beauty', slug='beauty')
     
-    # Create Products with stock
+    # Create Products with stock (prices in INR)
     products = [
         {
             'name': 'Wireless Earbuds, iPX8',
-            'price': 89.00,
+            'price': 7399.00,
             'category': headphones,
             'description': 'Organic Cotton, fairtrade certified',
             'stock': 125,
@@ -27,7 +27,7 @@ def seed():
         },
         {
             'name': 'AirPods Max',
-            'price': 549.00,
+            'price': 45599.00,
             'category': headphones,
             'description': 'A perfect balance of exhilarating high-fidelity audio and the effortless magic of AirPods.',
             'stock': 121,
@@ -35,7 +35,7 @@ def seed():
         },
         {
             'name': 'Bose BT Earphones',
-            'price': 289.00,
+            'price': 23999.00,
             'category': headphones,
             'description': 'Noise-cancelling wireless earphones with premium sound quality.',
             'stock': 107,
@@ -43,7 +43,7 @@ def seed():
         },
         {
             'name': 'VIVEFOX Headphones',
-            'price': 39.00,
+            'price': 3249.00,
             'category': headphones,
             'description': 'Wired Stereo Headset with High-Fidelity Audio.',
             'stock': 8,
@@ -51,7 +51,7 @@ def seed():
         },
         {
             'name': 'Borosil Body Butter',
-            'price': 25.00,
+            'price': 2075.00,
             'category': beauty,
             'description': 'Nourishing body butter for soft and smooth skin.',
             'stock': 50,
@@ -59,7 +59,7 @@ def seed():
         },
         {
             'name': 'Electric Iron',
-            'price': 45.00,
+            'price': 3735.00,
             'category': electronics,
             'description': 'Powerful steam iron for wrinkle-free clothes.',
             'stock': 30,
@@ -67,7 +67,7 @@ def seed():
         },
         {
             'name': 'Wooden Table',
-            'price': 199.00,
+            'price': 16517.00,
             'category': furniture,
             'description': 'Elegant wooden table for your living room.',
             'stock': 15,
@@ -75,7 +75,7 @@ def seed():
         },
         {
             'name': 'LED Bulb Pack',
-            'price': 12.00,
+            'price': 996.00,
             'category': electronics,
             'description': 'Energy-efficient LED bulbs, pack of 4.',
             'stock': 200,

@@ -8,6 +8,7 @@ urlpatterns = [
   path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
   path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
   path('user/', views.get_user),
+  path('user/orders/', views.get_user_orders),
   
   # Products
   path('products/', views.get_products),
@@ -32,4 +33,8 @@ urlpatterns = [
   path('products/<int:product_id>/reviews/', views.get_product_reviews),
   path('reviews/create/', views.create_review),
   path('reviews/<int:review_id>/delete/', views.delete_review),
+  
+  # Admin
+  path('admin/dashboard/', views.admin_dashboard_stats),
+  path('admin/orders/<int:order_id>/status/', views.update_order_status),
 ]
