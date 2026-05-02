@@ -1,13 +1,30 @@
 from rest_framework import serializers
-from .models import Product, Category, Cart, CartItem
+from .models import Product, Category, Cart, CartItem, Wishlist, Review
 from django.contrib.auth.models import User
+
 class CategorySerializer(serializers.ModelSerializer):
+    product_count = serializers.SerializerMethodField()
+    
     class Meta:
         model = Category
         fields = '__all__'
+    
+    def get_product_count(self, obj):
+        return obj.products.count()
+
+class ReviewSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'user', 'username', 'rating', 'comment', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at']
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
+    average_rating = serializers.ReadOnlyField()
+    review_count = serializers.ReadOnlyField()
+    reviews = ReviewSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
@@ -17,6 +34,8 @@ class CartItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
     product_price = serializers.DecimalField(source='product.price', max_digits=10, decimal_places=2, read_only=True)
     product_image = serializers.ImageField(source='product.image', read_only=True)
+    subtotal = serializers.ReadOnlyField()
+    
     class Meta:
         model = CartItem
         fields = '__all__'
@@ -24,9 +43,17 @@ class CartItemSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
     items = CartItemSerializer(many=True, read_only=True)
     total = serializers.ReadOnlyField()
+    
     class Meta:
         model = Cart
         fields = '__all__'
+
+class WishlistSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    
+    class Meta:
+        model = Wishlist
+        fields = ['id', 'product', 'created_at']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
