@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, UserProfile, Order, OrderItem, Cart, CartItem, Wishlist, Review
+from .models import Category, Product, UserProfile, Order, OrderItem, Cart, CartItem, Wishlist, Review, Coupon
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -15,9 +15,10 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'status', 'total_amount', 'created_at']
+    list_display = ['id', 'user', 'status', 'total_amount', 'discount_amount', 'created_at']
     list_filter = ['status', 'created_at']
-    search_fields = ['user__username']
+    search_fields = ['user__username', 'tracking_number']
+    list_editable = ['status']
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
@@ -30,6 +31,13 @@ class WishlistAdmin(admin.ModelAdmin):
     list_display = ['user', 'product', 'created_at']
     list_filter = ['created_at']
     search_fields = ['user__username', 'product__name']
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ['code', 'discount_type', 'discount_value', 'used_count', 'usage_limit', 'is_active', 'valid_from', 'valid_to']
+    list_filter = ['discount_type', 'is_active', 'valid_from', 'valid_to']
+    search_fields = ['code']
+    list_editable = ['is_active']
 
 admin.site.register(UserProfile)
 admin.site.register(OrderItem)

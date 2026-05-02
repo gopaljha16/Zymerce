@@ -14,7 +14,10 @@ class AIService:
     def __init__(self):
         self.model = None
         if GEMINI_API_KEY and GEMINI_API_KEY != 'your_gemini_api_key_here':
-            self.model = genai.GenerativeModel('gemini-pro')
+            try:
+                self.model = genai.GenerativeModel('gemini-pro')
+            except Exception as e:
+                print(f"Error initializing Gemini: {e}")
     
     def get_chatbot_response(self, user_message, context=None):
         """
@@ -22,7 +25,7 @@ class AIService:
         """
         if not self.model:
             return {
-                'response': 'AI service is not configured. Please add your Gemini API key.',
+                'response': 'AI service is not configured. Please add your Gemini API key to the .env file.',
                 'error': True
             }
         
@@ -104,7 +107,7 @@ class AIService:
         Generate AI-powered product description
         """
         if not self.model:
-            return "Product description not available."
+            return "AI description generation not available. Please configure Gemini API key."
         
         try:
             prompt = f"""
@@ -130,7 +133,7 @@ class AIService:
         Analyze product reviews and generate insights
         """
         if not self.model:
-            return "Review analysis not available."
+            return "Review analysis not available. Please configure Gemini API key."
         
         try:
             from .models import Review
