@@ -20,9 +20,16 @@ const initialState = {
 };
 
 // Fetch all products
-export const fetchProducts = createAsyncThunk('products/fetchAll', async (_, thunkAPI) => {
+export const fetchProducts = createAsyncThunk('products/fetchAll', async (forceRefresh = false, thunkAPI) => {
   try {
-    const response = await fetch(`${BASEURL}/api/products/`);
+    // Add timestamp to bypass cache when force refreshing
+    const url = forceRefresh 
+      ? `${BASEURL}/api/products/?t=${Date.now()}`
+      : `${BASEURL}/api/products/`;
+    
+    const response = await fetch(url, {
+      cache: forceRefresh ? 'no-cache' : 'default'
+    });
     const data = await response.json();
     return data;
   } catch (error) {

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
     ChartBarIcon, 
     ShoppingBagIcon, 
     UserGroupIcon, 
     CurrencyDollarIcon,
     ClockIcon,
-    ExclamationTriangleIcon
+    ExclamationTriangleIcon,
+    CubeIcon
 } from '@heroicons/react/24/outline';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { authFetch } from '../utils/auth';
@@ -21,6 +22,8 @@ function AdminDashboard() {
     
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [autoRefresh, setAutoRefresh] = useState(true);
 
     useEffect(() => {
         if (!user) {
@@ -28,10 +31,24 @@ function AdminDashboard() {
             return;
         }
         fetchDashboardStats();
-    }, [user, navigate]);
+        
+        // Auto-refresh every 30 seconds if enabled
+        let interval;
+        if (autoRefresh) {
+            interval = setInterval(() => {
+                fetchDashboardStats(true); // Silent refresh
+            }, 30000);
+        }
+        
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [user, navigate, autoRefresh]);
 
-    const fetchDashboardStats = async () => {
+    const fetchDashboardStats = async (silent = false) => {
         try {
+            if (!silent) setIsLoading(true);
+            
             const response = await authFetch(`${BASEURL}/api/admin/dashboard/`);
             if (response.status === 403) {
                 toast.error('Access denied. Admin privileges required.');
@@ -40,15 +57,21 @@ function AdminDashboard() {
             }
             const data = await response.json();
             setStats(data);
-            setIsLoading(false);
+            
+            if (!silent) {
+                setIsLoading(false);
+            }
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
-            toast.error('Failed to load dashboard');
-            setIsLoading(false);
+            if (!silent) {
+                toast.error('Failed to load dashboard');
+                setIsLoading(false);
+            }
         }
     };
 
     const updateOrderStatus = async (orderId, newStatus) => {
+        setIsUpdating(true);
         try {
             const response = await authFetch(`${BASEURL}/api/admin/orders/${orderId}/status/`, {
                 method: 'PATCH',
@@ -59,13 +82,18 @@ function AdminDashboard() {
             });
 
             if (response.ok) {
-                toast.success('Order status updated!');
-                fetchDashboardStats();
+                toast.success(`Order #${orderId} status updated to ${newStatus}!`);
+                // Immediately refresh dashboard data
+                await fetchDashboardStats(true);
             } else {
-                toast.error('Failed to update order status');
+                const errorData = await response.json();
+                toast.error(errorData.error || 'Failed to update order status');
             }
         } catch (error) {
+            console.error('Error updating order status:', error);
             toast.error('Error updating order status');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -104,9 +132,44 @@ function AdminDashboard() {
             
             <div className="max-w-7xl mx-auto px-6">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-                    <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>
+                <div className="mb-8 flex items-center justify-between">
+                    <div>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+                        <p className="text-gray-600">Welcome back! Here's what's happening with your store.</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {/* Product Management Link */}
+                        <Link
+                            to="/admin/products"
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                        >
+                            <CubeIcon className="w-5 h-5" />
+                            Manage Products
+                        </Link>
+                        
+                        {/* Auto-refresh toggle */}
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={autoRefresh}
+                                onChange={(e) => setAutoRefresh(e.target.checked)}
+                                className="w-4 h-4 rounded accent-primary"
+                            />
+                            <span className="text-sm text-gray-600">Auto-refresh (30s)</span>
+                        </label>
+                        
+                        {/* Manual refresh button */}
+                        <button
+                            onClick={() => fetchDashboardStats()}
+                            disabled={isUpdating}
+                            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        >
+                            <svg className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {/* Stats Cards */}
@@ -235,7 +298,8 @@ function AdminDashboard() {
                                         <select
                                             value={order.status}
                                             onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                            className="text-sm px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                                            disabled={isUpdating}
+                                            className="text-sm px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <option value="pending">Pending</option>
                                             <option value="processing">Processing</option>

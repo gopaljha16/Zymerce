@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { clearCart } from "../store/slices/cartSlice";
 import { authFetch } from "../utils/auth";
-import { useCart } from "../context/CartContext";
+import { initiateRazorpayPayment } from "../utils/payment";
 import SEO from "../components/SEO";
 import toast from 'react-hot-toast';
 import { ShoppingBagIcon, TruckIcon, CreditCardIcon } from '@heroicons/react/24/outline';
@@ -17,7 +19,8 @@ function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const nav = useNavigate();
-  const { clearCart, cartItems, total } = useCart();
+  const dispatch = useDispatch();
+  const { items: cartItems, total } = useSelector(s => s.cart);
   const BASEURL = import.meta.env.VITE_DJANGO_BASE_URL;
 
   const validateForm = () => {
@@ -70,24 +73,65 @@ function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await authFetch(`${BASEURL}/api/orders/create/`, {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
+      // If online payment, initiate Razorpay first
+      if (form.payment_method === "ONLINE") {
+        initiateRazorpayPayment(
+          total,
+          async (paymentResponse) => {
+            // Payment successful, create order
+            try {
+              const res = await authFetch(`${BASEURL}/api/orders/create/`, {
+                method: "POST",
+                body: JSON.stringify({
+                  ...form,
+                  payment_id: paymentResponse.razorpay_payment_id,
+                  payment_status: 'paid'
+                }),
+              });
 
-      const data = await res.json();
+              const data = await res.json();
 
-      if (res.ok) {
-        clearCart();
-        toast.success("Order placed successfully! 🎉");
-        nav("/dashboard");
+              if (res.ok) {
+                dispatch(clearCart());
+                toast.success("Order placed successfully! 🎉");
+                nav("/dashboard");
+              } else {
+                toast.error(data.error || "Failed to place order");
+              }
+            } catch (error) {
+              console.error("Order creation error:", error);
+              toast.error("Failed to create order after payment");
+            } finally {
+              setIsSubmitting(false);
+            }
+          },
+          (error) => {
+            // Payment failed
+            console.error("Payment failed:", error);
+            setIsSubmitting(false);
+          }
+        );
       } else {
-        toast.error(data.error || "Failed to place order");
+        // COD payment, create order directly
+        const res = await authFetch(`${BASEURL}/api/orders/create/`, {
+          method: "POST",
+          body: JSON.stringify(form),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          dispatch(clearCart());
+          toast.success("Order placed successfully! 🎉");
+          nav("/dashboard");
+        } else {
+          toast.error(data.error || "Failed to place order");
+        }
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Checkout error:", error);
       toast.error("An error occurred. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };

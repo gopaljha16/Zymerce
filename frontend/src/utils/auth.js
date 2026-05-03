@@ -4,9 +4,19 @@ export const saveTokens = (tokens) => {
   localStorage.setItem("refresh_token", tokens.refresh);
 };
 
+export const saveUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user));
+};
+
+export const getUser = () => {
+  const user = localStorage.getItem("user");
+  return user ? JSON.parse(user) : null;
+};
+
 export const clearTokens = () => {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user");
 };
 
 export const getAccessToken = () => localStorage.getItem("access_token");

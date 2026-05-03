@@ -21,7 +21,8 @@ class ProductPagination(PageNumberPagination):
 
 @api_view(['GET'])
 def get_products(request):
-    products = Product.objects.select_related('category').prefetch_related('reviews').all()
+    # Order by created_at descending (newest first) or by id descending
+    products = Product.objects.select_related('category').prefetch_related('reviews').all().order_by('-id')
     
     # Apply pagination
     paginator = ProductPagination()
@@ -217,7 +218,7 @@ def get_user_orders(request):
         items = OrderItem.objects.filter(order=order)
         items_data = [{
             'product_name': item.product.name,
-            'product_image': request.build_absolute_uri(item.product.image.url) if item.product.image else None,
+            'product_image': request.build_absolute_uri(item.product.image.url) if item.product.image and hasattr(item.product.image, 'url') else (request.build_absolute_uri(item.product.image) if item.product.image else None),
             'quantity': item.quantity,
             'price': str(item.price),
         } for item in items]
@@ -406,6 +407,99 @@ def generate_product_description(request):
     
     description = ai_service.generate_product_description(product_name, category)
     return Response({'description': description})
+
+# Product Management Views (Admin)
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def create_product(request):
+    """Create a new product"""
+    try:
+        # Log incoming data for debugging
+        print("POST Data:", request.POST)
+        print("FILES:", request.FILES)
+        
+        name = request.data.get('name') or request.POST.get('name')
+        description = request.data.get('description') or request.POST.get('description')
+        price = request.data.get('price') or request.POST.get('price')
+        category_id = request.data.get('category') or request.POST.get('category')
+        stock = request.data.get('stock') or request.POST.get('stock')
+        image = request.FILES.get('image')
+        
+        # Validate required fields
+        if not all([name, description, price, category_id, stock]):
+            missing = []
+            if not name: missing.append('name')
+            if not description: missing.append('description')
+            if not price: missing.append('price')
+            if not category_id: missing.append('category')
+            if not stock: missing.append('stock')
+            return Response({'error': f'Missing required fields: {", ".join(missing)}'}, status=400)
+        
+        # Get category
+        try:
+            category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=404)
+        
+        # Create product
+        product = Product.objects.create(
+            name=name,
+            description=description,
+            price=price,
+            category=category,
+            stock=stock,
+            image=image if image else None
+        )
+        
+        serializer = ProductSerializer(product, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        print(f"Error creating product: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAdminUser])
+def manage_product(request, product_id):
+    """Update or delete a product"""
+    try:
+        product = Product.objects.get(id=product_id)
+        
+        if request.method == 'PUT':
+            # Update fields
+            product.name = request.data.get('name', product.name)
+            product.description = request.data.get('description', product.description)
+            product.price = request.data.get('price', product.price)
+            product.stock = request.data.get('stock', product.stock)
+            
+            # Update category if provided
+            category_id = request.data.get('category')
+            if category_id:
+                try:
+                    category = Category.objects.get(id=category_id)
+                    product.category = category
+                except Category.DoesNotExist:
+                    return Response({'error': 'Category not found'}, status=404)
+            
+            # Update image if provided
+            image = request.FILES.get('image')
+            if image:
+                product.image = image
+            
+            product.save()
+            
+            serializer = ProductSerializer(product, context={'request': request})
+            return Response(serializer.data)
+        
+        elif request.method == 'DELETE':
+            product.delete()
+            return Response({'message': 'Product deleted successfully'}, status=status.HTTP_200_OK)
+            
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
 
 @api_view(['GET'])
 def analyze_reviews(request, product_id):

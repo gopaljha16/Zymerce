@@ -39,6 +39,8 @@ urlpatterns = [
   path('admin/dashboard/', views.admin_dashboard_stats),
   path('admin/orders/<int:order_id>/status/', views.update_order_status),
   path('admin/generate-description/', views.generate_product_description),
+  path('admin/products/', views.create_product),
+  path('admin/products/<int:product_id>/', views.manage_product),
   
   # AI Features
   path('ai/chatbot/', views.chatbot),

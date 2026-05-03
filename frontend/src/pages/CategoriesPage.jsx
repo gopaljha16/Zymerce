@@ -4,14 +4,17 @@ import { Link } from 'react-router-dom';
 import { fetchCategories } from '../store/slices/productSlice';
 import SEO from '../components/SEO';
 import { 
-    ComputerDesktopIcon, 
-    DevicePhoneMobileIcon,
-    HomeIcon,
     SparklesIcon,
-    ShoppingBagIcon,
-    TrophyIcon,
     ArrowRightIcon
 } from '@heroicons/react/24/outline';
+
+/* ── Leaf SVG ── */
+const Leaf = ({ className = '', style = {} }) => (
+    <svg className={className} style={style} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 36C4 36 8 14 28 8C28 8 32 26 12 34C12 34 20 22 24 18" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" fill="none" />
+        <path d="M4 36C4 36 8 14 28 8C28 8 32 26 12 34C12 34 20 22 24 18" fill="#86efac" fillOpacity="0.35" />
+    </svg>
+);
 
 function CategoriesPage() {
     const dispatch = useDispatch();
@@ -21,101 +24,80 @@ function CategoriesPage() {
         dispatch(fetchCategories());
     }, [dispatch]);
 
-    const categoryIcons = {
-        'Electronics': ComputerDesktopIcon,
-        'Fashion': ShoppingBagIcon,
-        'Home': HomeIcon,
-        'Beauty': SparklesIcon,
-        'Sports': TrophyIcon,
-        'Accessories': ShoppingBagIcon,
-    };
-
-    const categoryGradients = [
-        { from: 'from-blue-500', to: 'to-cyan-500', bg: 'bg-blue-500' },
-        { from: 'from-purple-500', to: 'to-pink-500', bg: 'bg-purple-500' },
-        { from: 'from-orange-500', to: 'to-red-500', bg: 'bg-orange-500' },
-        { from: 'from-green-500', to: 'to-emerald-500', bg: 'bg-green-500' },
-        { from: 'from-yellow-500', to: 'to-orange-500', bg: 'bg-yellow-500' },
-        { from: 'from-pink-500', to: 'to-rose-500', bg: 'bg-pink-500' },
+    const CATEGORIES = [
+        { emoji: '🌿', label: 'Organic',    name: 'Organic',    color: 'from-green-400 to-emerald-500' },
+        { emoji: '♻️', label: 'Recycled',   name: 'Recycled',   color: 'from-teal-400 to-cyan-500'    },
+        { emoji: '🌱', label: 'Natural',    name: 'Natural',    color: 'from-lime-400 to-green-500'   },
+        { emoji: '💧', label: 'Zero Waste', name: 'Zero Waste', color: 'from-blue-400 to-cyan-500'    },
+        { emoji: '🌻', label: 'Sustainable',name: 'Sustainable',color: 'from-amber-400 to-yellow-500' },
+        { emoji: '🍃', label: 'Vegan',      name: 'Vegan',      color: 'from-emerald-400 to-teal-500' },
     ];
 
     return (
         <div className="min-h-screen bg-white">
             <SEO 
                 title="Shop by Categories - Zymerce"
-                description="Browse all product categories at Zymerce. Find electronics, fashion, home goods, beauty products and more."
-                keywords="categories, shop by category, product categories, Zymerce"
+                description="Browse eco-friendly product categories. Organic, sustainable, zero-waste and more."
+                keywords="categories, eco categories, organic, sustainable, zero waste, Zymerce"
             />
 
-            {/* Hero Section - Premium Design */}
-            <div className="relative bg-black text-white overflow-hidden">
-                <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse"></div>
-                    <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-                    <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
-                </div>
+            {/* Hero Section - Eco Theme */}
+            <section
+                className="relative overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, #f7f9f4 0%, #eef5ea 40%, #f5f8ef 100%)' }}
+            >
+                {/* ── scattered leaves ── */}
+                <Leaf className="absolute w-10 h-10 opacity-80 animate-float"  style={{ top: '12%',  left: '15%', animationDelay: '0s',   transform: 'rotate(20deg)'  }} />
+                <Leaf className="absolute w-8  h-8  opacity-60 animate-float"  style={{ top: '25%', right: '18%', animationDelay: '1.2s', transform: 'rotate(-30deg)' }} />
+                <Leaf className="absolute w-12 h-12 opacity-70 animate-float"  style={{ bottom: '15%', left: '20%', animationDelay: '2.5s', transform: 'rotate(45deg)'  }} />
+                <Leaf className="absolute w-7  h-7  opacity-50 animate-float"  style={{ top: '35%', right:'10%',  animationDelay: '0.8s', transform: 'rotate(-15deg)' }} />
 
-                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 lg:py-32">
+                <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
                     <div className="text-center">
-                        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 px-4 sm:px-6 py-2 sm:py-3 rounded-full mb-6 sm:mb-8">
-                            <ShoppingBagIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                            <span className="text-xs sm:text-sm font-semibold tracking-wider uppercase">Explore Collections</span>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-300 bg-white/80 mb-6">
+                            <svg className="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs font-bold text-emerald-700 tracking-widest uppercase">Eco Collections</span>
                         </div>
                         
-                        <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black mb-4 sm:mb-6 tracking-tight">
+                        <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black mb-6 leading-tight" style={{ fontFamily: "'Playfair Display', serif", color: '#1a3a2a' }}>
                             Shop by
-                            <span className="block bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                            <span className="block" style={{
+                                background: 'linear-gradient(135deg, #4caf50, #2d8a40)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                            }}>
                                 Category
                             </span>
                         </h1>
                         
-                        <p className="text-base sm:text-xl lg:text-2xl text-gray-300 max-w-3xl mx-auto font-light">
-                            Discover curated collections across all your favorite categories
+                        <p className="text-gray-600 text-lg max-w-2xl mx-auto leading-relaxed">
+                            Discover curated eco-friendly collections across all sustainable categories
                         </p>
                     </div>
                 </div>
-            </div>
+            </section>
 
             {/* Categories Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    {categories.map((category, index) => {
-                        const Icon = categoryIcons[category.name] || ShoppingBagIcon;
-                        const gradient = categoryGradients[index % categoryGradients.length];
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                    {(categories.length ? categories : CATEGORIES).map((category, index) => {
+                        const eco = CATEGORIES[index % CATEGORIES.length];
                         
                         return (
                             <Link
-                                key={category.id}
-                                to={`/?category=${category.name}`}
+                                key={category.id || index}
+                                to={`/products?category=${category.name || eco.name}`}
                                 className="group"
                             >
-                                <div className="relative h-full">
-                                    {/* Glow Effect */}
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient.from} ${gradient.to} rounded-3xl blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`}></div>
-                                    
-                                    {/* Card */}
-                                    <div className="relative bg-white border border-gray-200 rounded-3xl overflow-hidden hover:border-gray-300 transition-all duration-300 hover:shadow-2xl h-full">
-                                        {/* Icon Section */}
-                                        <div className={`bg-gradient-to-br ${gradient.from} ${gradient.to} p-8 sm:p-10 lg:p-12 relative overflow-hidden`}>
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-                                            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full -ml-12 -mb-12"></div>
-                                            <Icon className="w-12 h-12 sm:w-16 sm:h-16 text-white relative z-10 group-hover:scale-110 transition-transform duration-300" />
-                                        </div>
-                                        
-                                        {/* Content */}
-                                        <div className="p-6 sm:p-8">
-                                            <h2 className="text-2xl sm:text-3xl font-bold mb-2 group-hover:text-gray-900 transition-colors">
-                                                {category.name}
-                                            </h2>
-                                            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-                                                {category.product_count} Products
-                                            </p>
-                                            <div className="flex items-center text-gray-900 font-semibold group-hover:gap-3 transition-all">
-                                                <span className="text-sm sm:text-base">Explore Collection</span>
-                                                <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 transform group-hover:translate-x-2 transition-transform" />
-                                            </div>
-                                        </div>
+                                <div className="bg-white rounded-3xl p-6 text-center shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 hover:border-emerald-200">
+                                    <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${eco.color} flex items-center justify-center text-3xl shadow-md group-hover:scale-110 transition-transform`}>
+                                        {eco.emoji}
                                     </div>
+                                    <h3 className="font-bold text-gray-800 text-sm group-hover:text-primary transition-colors">{category.name || eco.label}</h3>
+                                    <p className="text-xs text-gray-400 mt-1">{category.product_count || '20+'} items</p>
                                 </div>
                             </Link>
                         );
@@ -123,35 +105,35 @@ function CategoriesPage() {
                 </div>
 
                 {/* Benefits Section */}
-                <div className="mt-16 sm:mt-24 lg:mt-32">
-                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-center mb-8 sm:mb-12 lg:mb-16 tracking-tight">
+                <div className="mt-24">
+                    <h2 className="text-4xl font-black text-center mb-12" style={{ fontFamily: "'Playfair Display', serif", color: '#1a3a2a' }}>
                         Why Shop by Category?
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
                             {
-                                icon: '🎯',
-                                title: 'Easy Navigation',
-                                description: 'Find exactly what you need with organized categories'
+                                icon: '🌿',
+                                title: 'Eco-Organized',
+                                description: 'Find sustainable products organized by eco-friendly categories'
                             },
                             {
-                                icon: '⚡',
-                                title: 'Quick Discovery',
-                                description: 'Discover new products in your favorite categories'
+                                icon: '🌱',
+                                title: 'Certified Green',
+                                description: 'Every category features 100% verified eco-friendly products'
                             },
                             {
-                                icon: '💎',
+                                icon: '♻️',
                                 title: 'Curated Selection',
-                                description: 'Hand-picked quality products in every category'
+                                description: 'Hand-picked sustainable items in every collection'
                             }
                         ].map((benefit, index) => (
                             <div key={index} className="group">
-                                <div className="bg-gray-50 rounded-3xl p-6 sm:p-8 text-center hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-200">
-                                    <div className="text-5xl sm:text-6xl mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                                <div className="bg-white rounded-3xl p-8 text-center hover:shadow-xl transition-all duration-300 border border-gray-100 hover:border-emerald-200">
+                                    <div className="text-6xl mb-6 group-hover:scale-110 transition-transform">
                                         {benefit.icon}
                                     </div>
-                                    <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3">{benefit.title}</h3>
-                                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                                    <h3 className="text-2xl font-bold mb-3" style={{ color: '#1a3a2a' }}>{benefit.title}</h3>
+                                    <p className="text-gray-600 leading-relaxed">
                                         {benefit.description}
                                     </p>
                                 </div>

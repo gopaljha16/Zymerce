@@ -21,22 +21,50 @@ function UserDashboard() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!user) {
+        const token = localStorage.getItem('access_token');
+        
+        if (!user && !token) {
+            toast.error('Please login to view your orders');
             navigate('/login');
             return;
         }
+        
         fetchOrders();
     }, [user, navigate]);
 
     const fetchOrders = async () => {
         try {
             const response = await authFetch(`${BASEURL}/api/user/orders/`);
+            
+            // Check if response is HTML (backend error)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/html')) {
+                throw new Error('Backend server error. Please ensure Django server is running on http://127.0.0.1:8000');
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Orders fetch error:', errorData);
+                throw new Error(errorData.detail || errorData.error || 'Failed to fetch orders');
+            }
+            
             const data = await response.json();
-            setOrders(data);
+            console.log('Orders data:', data); // Debug log
+            setOrders(Array.isArray(data) ? data : []);
             setIsLoading(false);
         } catch (error) {
             console.error('Error fetching orders:', error);
-            toast.error('Failed to load orders');
+            
+            // Provide helpful error messages
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                toast.error('Cannot connect to server. Please start the Django backend server.');
+            } else if (error.message.includes('Backend server error')) {
+                toast.error('Backend server error. Check Django console for details.');
+            } else {
+                toast.error(error.message || 'Failed to load orders');
+            }
+            
+            setOrders([]);
             setIsLoading(false);
         }
     };
@@ -139,9 +167,13 @@ function UserDashboard() {
                                                 <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                                                     {item.product_image ? (
                                                         <img
-                                                            src={item.product_image}
+                                                            src={item.product_image.startsWith('http') ? item.product_image : `${BASEURL}${item.product_image}`}
                                                             alt={item.product_name}
                                                             className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = '/placeholder.png';
+                                                            }}
                                                         />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
